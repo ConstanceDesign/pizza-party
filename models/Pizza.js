@@ -1,32 +1,53 @@
 // install dependencies
 const { Schema, model } = require("mongoose");
+const dateFormat = require("../utils/dateFormat");
 
 // Schema
-const PizzaSchema = new Schema({
-  // name of pizza
-  pizzaName: {
-    type: String,
+const PizzaSchema = new Schema(
+  {
+    pizzaName: {
+      type: String,
+    },
+    createdBy: {
+      type: String,
+    },
+    createdAt: {
+      type: Date,
+      default: Date.now,
+      get: (createdAtVal) => dateFormat(createdAtVal),
+    },
+    size: {
+      type: String,
+      default: "Large",
+    },
+    toppings: [],
+    comments: [
+      {
+        type: Schema.Types.ObjectId,
+        ref: "Comment",
+      },
+    ],
   },
-  // name of user who created the pizza
-  createdBy: {
-    type: String,
-  },
-  // timestamp when pizza was created (and updated)
-  createdAt: {
-    type: Date,
-    default: Date.now,
-  },
-  // pizza's size
-  size: {
-    type: String,
-    default: "Large",
-  },
-  // pizza's toppings (can also specify "array" instead of brackets)
-  toppings: [],
-});
+  {
+    toJSON: {
+      virtuals: true,
+      getters: true,
+    },
+    id: false,
+  }
+);
 
 // create the Pizza model using the PizzaSchema
 const Pizza = model("Pizza", PizzaSchema);
 
 // export the Pizza model
 module.exports = Pizza;
+
+// virtuals to maintain the count (not sure if correct in this location)
+const pizza = await Pizza.findOne();
+pizza.commentCount; // 5
+
+// get total count of comments and replies on retrieval
+PizzaSchema.virtual("commentCount").get(function () {
+  return this.comments.length;
+});

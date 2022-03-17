@@ -1,0 +1,2 @@
+// /api/comments/<pizzaId>
+router.route('/:pizzaId').post(addComment);
